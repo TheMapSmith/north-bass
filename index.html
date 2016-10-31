@@ -1,0 +1,272 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="initial-scale=1,user-scalable=no,maximum-scale=1,width=device-width">
+        <meta name="mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <link rel="stylesheet" href="css/leaflet.css" />
+        <link rel="stylesheet" type="text/css" href="css/qgis2web.css">
+        <link rel="stylesheet" href="css/MarkerCluster.css" />
+        <link rel="stylesheet" href="css/MarkerCluster.Default.css" />
+        <link rel="stylesheet" href="css/leaflet.draw.css" />
+        <link rel="stylesheet" href="css/leaflet.measurecontrol.css" />
+        <script src="js/leaflet.js"></script>
+        <script src="js/leaflet-heat.js"></script>
+        <script src="js/leaflet.rotatedMarker.js"></script>
+        <script src="js/OSMBuildings-Leaflet.js"></script>
+        <script src="js/leaflet-hash.js"></script>
+        <script src="js/Autolinker.min.js"></script>
+        <script src="js/leaflet.draw.js"></script>
+        <script src="js/leaflet.measurecontrol.js"></script>
+        <script src="js/leaflet.markercluster.js"></script>
+        <style>
+        html, body, #map {
+            width: 100%;
+            height: 100%;
+            padding: 0;
+            margin: 0;
+        }
+        </style>
+        <title></title>
+    </head>
+    <body>
+        <div id="map">
+        </div>
+        <script src="data/json_Soils4.js"></script>
+        <script src="data/json_BlueParcels5.js"></script>
+        <script>
+        var highlightLayer;
+        function highlightFeature(e) {
+            highlightLayer = e.target;
+            highlightLayer.openPopup();
+        }
+        L.ImageOverlay.include({
+            getBounds: function () {
+                return this._bounds;
+            }
+        });
+        var map = L.map('map', {
+            measureControl:true,
+            zoomControl:true, maxZoom:24, minZoom:12
+        })
+        var hash = new L.Hash(map);
+        map.attributionControl.addAttribution('<a href="https://github.com/tomchadwin/qgis2web" target="_blank">qgis2web</a>');
+        var feature_group = new L.featureGroup([]);
+        var bounds_group = new L.featureGroup([]);
+        var raster_group = new L.LayerGroup([]);
+        function setBounds() {
+            if (bounds_group.getLayers().length) {
+                map.fitBounds(bounds_group.getBounds());
+            }
+        }
+        function geoJson2heat(geojson, weight) {
+          return geojson.features.map(function(feature) {
+            return [
+              feature.geometry.coordinates[1],
+              feature.geometry.coordinates[0],
+              feature.properties[weight]
+            ];
+          });
+        }
+        var img_orthoSW0 = 'data/json_orthoSW0.png';
+        var img_bounds_orthoSW0 = [[41.6972652289,-82.842433235],[41.711038954,-82.8240534315]];
+        var overlay_orthoSW0 = new L.imageOverlay(img_orthoSW0, img_bounds_orthoSW0);
+        bounds_group.addLayer(overlay_orthoSW0);
+        raster_group.addLayer(overlay_orthoSW0);
+        var img_orthoNW1 = 'data/json_orthoNW1.png';
+        var img_bounds_orthoNW1 = [[41.7109865201,-82.8425051483],[41.7247601861,-82.8241214707]];
+        var overlay_orthoNW1 = new L.imageOverlay(img_orthoNW1, img_bounds_orthoNW1);
+        bounds_group.addLayer(overlay_orthoNW1);
+        raster_group.addLayer(overlay_orthoNW1);
+        var img_orthoSE2 = 'data/json_orthoSE2.png';
+        var img_bounds_orthoSE2 = [[41.697317652,-82.8241214707],[41.7110885069,-82.8057454825]];
+        var overlay_orthoSE2 = new L.imageOverlay(img_orthoSE2, img_bounds_orthoSE2);
+        bounds_group.addLayer(overlay_orthoSE2);
+        raster_group.addLayer(overlay_orthoSE2);
+        var img_orthoNE3 = 'data/json_orthoNE3.png';
+        var img_bounds_orthoNE3 = [[41.711038954,-82.8241895385],[41.7248097491,-82.8058096778]];
+        var overlay_orthoNE3 = new L.imageOverlay(img_orthoNE3, img_bounds_orthoNE3);
+        bounds_group.addLayer(overlay_orthoNE3);
+        raster_group.addLayer(overlay_orthoNE3);
+        function pop_Soils4(feature, layer) {
+            layer.on({
+                mouseout: function(e) {
+                    if (typeof layer.closePopup == 'function') {
+                        layer.closePopup();
+                    } else {
+                        layer.eachLayer(function(feature){
+                            feature.closePopup()
+                        });
+                    }
+                },
+                mouseover: highlightFeature,
+            });
+            var popupContent = '<table><tr><td colspan="2">' + (feature.properties['AREASYMBOL'] !== null ? Autolinker.link(String(feature.properties['AREASYMBOL'])) : '') + '</td></tr><tr><td colspan="2">' + (feature.properties['SPATIALVER'] !== null ? Autolinker.link(String(feature.properties['SPATIALVER'])) : '') + '</td></tr><tr><td colspan="2">' + (feature.properties['MUSYM'] !== null ? Autolinker.link(String(feature.properties['MUSYM'])) : '') + '</td></tr><tr><td colspan="2">' + (feature.properties['MUKEY'] !== null ? Autolinker.link(String(feature.properties['MUKEY'])) : '') + '</td></tr></table>';
+            layer.bindPopup(popupContent);
+        }
+
+        function doStyleSoils4(feature) {
+			switch (feature.properties['MUSYM']) {
+                case 'ChB':
+                    return {
+                    weight: '1.04',
+                    fillColor: '#281cd8',
+                    color: '#000000',
+                    dashArray: '',
+                    lineCap: 'butt',
+                    lineJoin: 'miter',
+                    opacity: '1.0',
+                    fillOpacity: '1.0',
+                };
+                break;
+
+                case 'HaA':
+                    return {
+                    weight: '1.04',
+                    fillColor: '#e93ba4',
+                    color: '#000000',
+                    dashArray: '',
+                    lineCap: 'butt',
+                    lineJoin: 'miter',
+                    opacity: '1.0',
+                    fillOpacity: '1.0',
+                };
+                break;
+
+                case 'MtB':
+                    return {
+                    weight: '1.04',
+                    fillColor: '#88d211',
+                    color: '#000000',
+                    dashArray: '',
+                    lineCap: 'butt',
+                    lineJoin: 'miter',
+                    opacity: '1.0',
+                    fillOpacity: '1.0',
+                };
+                break;
+
+                case 'NpA':
+                    return {
+                    weight: '1.04',
+                    fillColor: '#58a4d3',
+                    color: '#000000',
+                    dashArray: '',
+                    lineCap: 'butt',
+                    lineJoin: 'miter',
+                    opacity: '1.0',
+                    fillOpacity: '1.0',
+                };
+                break;
+
+                case 'OaB':
+                    return {
+                    weight: '1.04',
+                    fillColor: '#dac07c',
+                    color: '#000000',
+                    dashArray: '',
+                    lineCap: 'butt',
+                    lineJoin: 'miter',
+                    opacity: '1.0',
+                    fillOpacity: '1.0',
+                };
+                break;
+
+                case 'RaB':
+                    return {
+                    weight: '1.04',
+                    fillColor: '#37d0a5',
+                    color: '#000000',
+                    dashArray: '',
+                    lineCap: 'butt',
+                    lineJoin: 'miter',
+                    opacity: '1.0',
+                    fillOpacity: '1.0',
+                };
+                break;
+
+                case 'To':
+                    return {
+                    weight: '1.04',
+                    fillColor: '#d16963',
+                    color: '#000000',
+                    dashArray: '',
+                    lineCap: 'butt',
+                    lineJoin: 'miter',
+                    opacity: '1.0',
+                    fillOpacity: '1.0',
+                };
+                break;
+
+                case 'Tp':
+                    return {
+                    weight: '1.04',
+                    fillColor: '#ab4ecc',
+                    color: '#000000',
+                    dashArray: '',
+                    lineCap: 'butt',
+                    lineJoin: 'miter',
+                    opacity: '1.0',
+                    fillOpacity: '1.0',
+                };
+                break;
+
+            }
+        }
+        map.createPane('pane_Soils4');
+        map.getPane('pane_Soils4').style.zIndex = 605;
+        var json_Soils4JSON = new L.geoJson(json_Soils4, {
+            pane: 'pane_Soils4',
+            onEachFeature: pop_Soils4,
+            style: doStyleSoils4
+        });
+        bounds_group.addLayer(json_Soils4JSON);
+        feature_group.addLayer(json_Soils4JSON);
+        function pop_BlueParcels5(feature, layer) {
+            layer.on({
+                mouseout: function(e) {
+                    if (typeof layer.closePopup == 'function') {
+                        layer.closePopup();
+                    } else {
+                        layer.eachLayer(function(feature){
+                            feature.closePopup()
+                        });
+                    }
+                },
+                mouseover: highlightFeature,
+            });
+            var popupContent = '<table><tr><td colspan="2">' + (feature.properties['PIN'] !== null ? Autolinker.link(String(feature.properties['PIN'])) : '') + '</td></tr><tr><td colspan="2">' + (feature.properties['ROW'] !== null ? Autolinker.link(String(feature.properties['ROW'])) : '') + '</td></tr><tr><td colspan="2">' + (feature.properties['SCHOOL'] !== null ? Autolinker.link(String(feature.properties['SCHOOL'])) : '') + '</td></tr><tr><td colspan="2">' + (feature.properties['TOWNSHIP'] !== null ? Autolinker.link(String(feature.properties['TOWNSHIP'])) : '') + '</td></tr><tr><td colspan="2">' + (feature.properties['SECTION'] !== null ? Autolinker.link(String(feature.properties['SECTION'])) : '') + '</td></tr><tr><td colspan="2">' + (feature.properties['TOWNNUM'] !== null ? Autolinker.link(String(feature.properties['TOWNNUM'])) : '') + '</td></tr><tr><td colspan="2">' + (feature.properties['RANGENUM'] !== null ? Autolinker.link(String(feature.properties['RANGENUM'])) : '') + '</td></tr><tr><td colspan="2">' + (feature.properties['LOT'] !== null ? Autolinker.link(String(feature.properties['LOT'])) : '') + '</td></tr><tr><td colspan="2">' + (feature.properties['SUBLOT'] !== null ? Autolinker.link(String(feature.properties['SUBLOT'])) : '') + '</td></tr><tr><td colspan="2">' + (feature.properties['PARCELID'] !== null ? Autolinker.link(String(feature.properties['PARCELID'])) : '') + '</td></tr><tr><td colspan="2">' + (feature.properties['TAXDIST'] !== null ? Autolinker.link(String(feature.properties['TAXDIST'])) : '') + '</td></tr><tr><td colspan="2">' + (feature.properties['DISTRICT'] !== null ? Autolinker.link(String(feature.properties['DISTRICT'])) : '') + '</td></tr><tr><td colspan="2">' + (feature.properties['OWNER'] !== null ? Autolinker.link(String(feature.properties['OWNER'])) : '') + '</td></tr><tr><td colspan="2">' + (feature.properties['PROP_ADDR'] !== null ? Autolinker.link(String(feature.properties['PROP_ADDR'])) : '') + '</td></tr><tr><td colspan="2">' + (feature.properties['CITY'] !== null ? Autolinker.link(String(feature.properties['CITY'])) : '') + '</td></tr><tr><td colspan="2">' + (feature.properties['STATE'] !== null ? Autolinker.link(String(feature.properties['STATE'])) : '') + '</td></tr><tr><td colspan="2">' + (feature.properties['ZIP'] !== null ? Autolinker.link(String(feature.properties['ZIP'])) : '') + '</td></tr><tr><td colspan="2">' + (feature.properties['LEGAL_DESC'] !== null ? Autolinker.link(String(feature.properties['LEGAL_DESC'])) : '') + '</td></tr><tr><td colspan="2">' + (feature.properties['MAIL_ADDR'] !== null ? Autolinker.link(String(feature.properties['MAIL_ADDR'])) : '') + '</td></tr><tr><td colspan="2">' + (feature.properties['ACRES'] !== null ? Autolinker.link(String(feature.properties['ACRES'])) : '') + '</td></tr><tr><td colspan="2">' + (feature.properties['NBRHOOD'] !== null ? Autolinker.link(String(feature.properties['NBRHOOD'])) : '') + '</td></tr><tr><td colspan="2">' + (feature.properties['SALE_DATE'] !== null ? Autolinker.link(String(feature.properties['SALE_DATE'])) : '') + '</td></tr><tr><td colspan="2">' + (feature.properties['VALIDITY'] !== null ? Autolinker.link(String(feature.properties['VALIDITY'])) : '') + '</td></tr><tr><td colspan="2">' + (feature.properties['SALE_PRICE'] !== null ? Autolinker.link(String(feature.properties['SALE_PRICE'])) : '') + '</td></tr><tr><td colspan="2">' + (feature.properties['BOOK'] !== null ? Autolinker.link(String(feature.properties['BOOK'])) : '') + '</td></tr><tr><td colspan="2">' + (feature.properties['PAGE'] !== null ? Autolinker.link(String(feature.properties['PAGE'])) : '') + '</td></tr><tr><td colspan="2">' + (feature.properties['S_T_R'] !== null ? Autolinker.link(String(feature.properties['S_T_R'])) : '') + '</td></tr><tr><td colspan="2">' + (feature.properties['CAUV_APP'] !== null ? Autolinker.link(String(feature.properties['CAUV_APP'])) : '') + '</td></tr><tr><td colspan="2">' + (feature.properties['AUDITOR'] !== null ? Autolinker.link(String(feature.properties['AUDITOR'])) : '') + '</td></tr><tr><td colspan="2">' + (feature.properties['TREASURER'] !== null ? Autolinker.link(String(feature.properties['TREASURER'])) : '') + '</td></tr><tr><td colspan="2">' + (feature.properties['Shape_STAr'] !== null ? Autolinker.link(String(feature.properties['Shape_STAr'])) : '') + '</td></tr><tr><td colspan="2">' + (feature.properties['Shape_STLe'] !== null ? Autolinker.link(String(feature.properties['Shape_STLe'])) : '') + '</td></tr></table>';
+            layer.bindPopup(popupContent);
+        }
+
+        function doStyleBlueParcels5(feature) {
+            return {
+                weight: 4.0,
+                color: '#1f78b4',
+                fillColor: '#000000',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                opacity: 1.0,
+                fillOpacity: 0.0
+            };
+        }
+        map.createPane('pane_BlueParcels5');
+        map.getPane('pane_BlueParcels5').style.zIndex = 606;
+        var json_BlueParcels5JSON = new L.geoJson(json_BlueParcels5, {
+            pane: 'pane_BlueParcels5',
+            onEachFeature: pop_BlueParcels5,
+            style: doStyleBlueParcels5
+        });
+        bounds_group.addLayer(json_BlueParcels5JSON);
+        feature_group.addLayer(json_BlueParcels5JSON);
+        raster_group.addTo(map);
+        feature_group.addTo(map);
+        var baseMaps = {};
+        L.control.layers(baseMaps,{'<img src="legend/BlueParcels5.png" /> Blue_Parcels': json_BlueParcels5JSON,'Soils<br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<img src="legend/Soils4_ChB.png" /> ChB<br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<img src="legend/Soils4_HaA.png" /> HaA<br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<img src="legend/Soils4_MtB.png" /> MtB<br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<img src="legend/Soils4_NpA.png" /> NpA<br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<img src="legend/Soils4_OaB.png" /> OaB<br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<img src="legend/Soils4_RaB.png" /> RaB<br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<img src="legend/Soils4_To.png" /> To<br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<img src="legend/Soils4_Tp.png" /> Tp<br />': json_Soils4JSON,"orthoNE": overlay_orthoNE3,"orthoSE": overlay_orthoSE2,"orthoNW": overlay_orthoNW1,"orthoSW": overlay_orthoSW0,},{collapsed:false}).addTo(map);
+        setBounds();
+        </script>
+    </body>
+</html>
